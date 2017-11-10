@@ -7,3 +7,5 @@
 #      Author: Huoty <sudohuoty@gmail.com>
 #  CreateTime: 2017-10-28 16:57:26
 # *************************************************************
+
+"""Break GFW(Great Fire Wall)"""
