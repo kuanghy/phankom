@@ -1,12 +1,10 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # *************************************************************
 #  Copyright (c) Huoty - All rights reserved
 #
 #      Author: Huoty <sudohuoty@gmail.com>
-#  CreateTime: 2017-10-28 16:42:38
+#  CreateTime: 2017-11-12 22:32:40
 # *************************************************************
 
-"""Proxy Frame"""
-
+"""HTTP proxy frame"""

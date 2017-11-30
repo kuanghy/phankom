@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # *************************************************************
@@ -7,3 +6,11 @@
 #      Author: Huoty <sudohuoty@gmail.com>
 #  CreateTime: 2017-10-28 16:53:07
 # *************************************************************
+
+
+from .log import setup_logging
+from .socks import Socks5Server
+
+
+setup_logging()
+Socks5Server().start()

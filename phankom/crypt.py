@@ -10,7 +10,9 @@
 
 """加密混淆"""
 
-
+import os
+import zlib
+import random
 import hashlib
 import itertools
 
@@ -25,21 +27,21 @@ def sha1(data):
     return hashlib.sha1(data.encode("utf-8")).hexdigest()
 
 
-class Mixer(object):
-    """数据混淆器"""
+class MixCipher(object):
+    """混淆加密"""
 
-    def __init__(self, key=None):
+    def __init__(self, key):
         self.salt = md5(key).encode("utf-8")
 
     def _xor_data(self, data):
-        return "".join([x ^ y for x, y in zip(data, itertools.cycle(self.salt))])
-
-    @staticmethod
-    def _to_bytes(data):
-        return data if isinstance(data, bytes) else data.encode("utf-8")
+        data = [(x ^ y).to_bytes(1, "big") for x, y in
+                zip(data, itertools.cycle(self.salt))]
+        return b"".join(data)
 
     def encrypt(self, data):
-        return self._xor_data(self._to_bytes(data))
+        data = self._xor_data(data)
+        return zlib.compress(data)
 
     def decrypt(self, data):
-        return self._xor_data(self._to_bytes(data))
+        data = zlib.decompress(data)
+        return self._xor_data(data)
