@@ -10,7 +10,9 @@
 
 from .log import setup_logging
 from .socks import Socks5Server
+from .break import LocalBreakServer
 
 
 setup_logging()
-Socks5Server().start()
+# Socks5Server().start()
+LocalBreakServer()
