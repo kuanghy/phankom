@@ -14,6 +14,7 @@ import socket
 import struct
 import select
 import logging
+import traceback
 from threading import Thread
 
 from .utils import affirm
@@ -110,6 +111,7 @@ class Socks5Server(BaseSocks):
     def _check_auth(self, sock):
         """校验认证方式"""
         data = sock.recv(256)
+        affirm(data, "No auth information")
 
         version = data[0]
         self._check_protocol_version(version)
@@ -230,6 +232,7 @@ class Socks5Server(BaseSocks):
             self._transfer_stream(sock, remote)
         except Exception as e:
             self.log.warning(e)
+            self.log.debug(traceback.format_exc().strip())
         finally:
             if remote:
                 remote.close()

@@ -7,12 +7,8 @@
 #  CreateTime: 2017-10-28 16:53:07
 # *************************************************************
 
+import sys
+from .cmd import main
 
-from .log import setup_logging
-from .socks import Socks5Server
-from .break import LocalBreakServer
-
-
-setup_logging()
-# Socks5Server().start()
-LocalBreakServer()
+sys.argv[0] = "phankom"
+sys.exit(main())

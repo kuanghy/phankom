@@ -8,7 +8,7 @@
 #  CreateTime: 2017-10-28 16:57:26
 # *************************************************************
 
-"""Break GFW(Great Fire Wall)"""
+"""Climb over the GFW(Great Fire Wall)"""
 
 import os
 import socket
@@ -21,8 +21,8 @@ from .crypt import MixCipher
 from .utils import affirm, is_even
 
 
-class BaseBreakServer(Socks5Server):
-    """Break GFW(Great Fire Wall) server based on Socks"""
+class BaseClimbServer(Socks5Server):
+    """Climb over GFW(Great Fire Wall) server based on Socks"""
 
     def __init__(self, key, host="0.0.0.0", port=1080):
         self.cipher = MixCipher(key)
@@ -31,10 +31,12 @@ class BaseBreakServer(Socks5Server):
     def recv_encrypted_data(self, sock=None):
         sock = sock or self.sock
         head = self.recv_data(sock, 6)
+        self.log.debug(head)
         if len(head) <= 0:
             return head
-        data_len = (int.from_bytes(head[3:5]) if is_even(head[2]) else
-                    int.from_bytes(head[4:]))
+        data_len = (int.from_bytes(head[3:5], byteorder="big")
+                    if is_even(head[2]) else
+                    int.from_bytes(head[4:], byteorder="big"))
         size = data_len
         data = b''
         while 1:
@@ -46,20 +48,22 @@ class BaseBreakServer(Socks5Server):
                 break
             else:
                 raise Exception("received data is too long")
-        return self.cipher.decrypt(data)
+        data = self.cipher.decrypt(data)
+        return data
 
     def send_encrypted_data(self, data, sock=None):
         sock = sock or self.sock
         data = self.cipher.encrypt(data)
-        len_byte = len(data).to_bytes(1, "big")
+        len_byte = len(data).to_bytes(2, "big")
         len_pad = random.randint(0, 255)
-        len_data = (len_pad + len_byte + os.urandom(1) if is_even(len_pad) else
-                    len_byte + os.urandom(1) + len_pad)
+        len_data = (len_pad.to_bytes(1, "big") + len_byte + os.urandom(1)
+                    if is_even(len_pad) else
+                    len_byte + os.urandom(1) + len_pad.to_bytes(1, "big"))
         data = os.urandom(2) + len_data + data
         self.send_data(data, sock)
 
 
-class LocalBreakServer(BaseBreakServer):
+class LocalClimbServer(BaseClimbServer):
     """穿墙代理本地服务器"""
 
     def __init__(self, key, host="127.0.0.1", port=1080,
@@ -69,10 +73,10 @@ class LocalBreakServer(BaseBreakServer):
         self.server_port = server_port
 
     def _connet_remote(self, addr, port, addr_data=None):
-        remote = super()._connet_remote(addr, port)
+        remote = super()._connet_remote(self.server_host, self.server_port)
         self.send_encrypted_data(data=addr_data, sock=remote)
         data = self.recv_encrypted_data(sock=remote)
-        affirm(data[0] == 0, "Connect to remote server failed")
+        affirm(data[0] == 0, "Remote server connection refused")
         return remote
 
     def _transfer_stream(self, sock, remote):
@@ -94,7 +98,7 @@ class LocalBreakServer(BaseBreakServer):
                 self.send_data(data, sock)
 
 
-class RemoteBreakServer(BaseBreakServer):
+class RemoteClimbServer(BaseClimbServer):
     """穿墙代理远程服务器"""
 
     def __init__(self, key, host="0.0.0.0", port=8324):
@@ -112,7 +116,7 @@ class RemoteBreakServer(BaseBreakServer):
         elif addr_type == 3:
             # 域名，第一个字节为域名长度，剩余的内容为域名
             addr_len = data[1]
-            remote_addr = data[1:addr_len+1]
+            remote_addr = data[2:addr_len+2]
         elif addr_type == 4:
             # IPv6 地址，目的地址为 16 个字节长度
             remote_addr = socket.inet_ntop(socket.AF_INET6, data[1:17])
